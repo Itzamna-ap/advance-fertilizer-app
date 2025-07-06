@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- The title will be set by Code.gs -->
+    <title>Advance Fertilizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -20,18 +20,6 @@
             font-family: 'Sarabun', sans-serif;
             background-color: #f7fafc;
         }
-        .sidebar-icon {
-            width: 24px;
-            height: 24px;
-        }
-        .data-table th, .data-table td {
-            padding: 12px 16px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .data-table tbody tr:hover {
-            background-color: #f1f5f9;
-            cursor: pointer;
-        }
         .main-page {
             display: none;
         }
@@ -45,17 +33,20 @@
             display: flex;
         }
         #mapContainer {
-            height: 80vh;
+            height: calc(100vh - 150px); /* Adjust height for mobile view */
             border-radius: 0.75rem;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
+        .bottom-nav-link.active {
+            color: #10B981; /* green-500 */
+        }
     </style>
 </head>
-<body>
+<body class="pb-24">
 
     <!-- Login Page -->
     <div id="loginPage" class="flex items-center justify-center h-screen bg-gray-100">
-        <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
+        <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg mx-4">
             <div class="text-center mb-8">
                 <div class="inline-block bg-green-100 p-3 rounded-full">
                     <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2h1a2 2 0 002-2v-1a2 2 0 012-2h1.945M7.881 4.002l.023.023a1 1 0 01.023 1.414l-1.06 1.06a1 1 0 01-1.414 0l-1.06-1.06a1 1 0 010-1.414l1.06-1.06a1 1 0 011.414.023zM16.119 4.002l-1.06 1.06a1 1 0 01-1.414 0l-1.06-1.06a1 1 0 010-1.414l1.06-1.06a1 1 0 011.414 0l1.06 1.06a1 1 0 01.023 1.414zM12 21a9 9 0 110-18 9 9 0 010 18z"></path></svg>
@@ -86,145 +77,124 @@
 
     <!-- Main App Structure -->
     <div id="mainApp" class="hidden">
-        <div class="flex h-screen bg-gray-100">
-            <!-- Sidebar -->
-            <div class="w-64 bg-white shadow-md flex flex-col">
-                <div class="p-6 text-center border-b">
-                     <h1 class="text-2xl font-bold text-green-600">Advance Fertilizer</h1>
+        <!-- Header -->
+        <header class="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-10">
+            <h1 class="text-xl font-bold text-green-600">Advance Fertilizer</h1>
+            <div id="userInfo" class="flex items-center">
+                <div class="text-right mr-3">
+                    <p id="userName" class="font-semibold text-gray-800 text-sm">ชื่อผู้ใช้</p>
+                    <p id="userRole" class="text-xs text-gray-500">บทบาท</p>
                 </div>
-                <nav class="flex-1 px-4 py-6 space-y-2">
-                    <a href="#dashboard" class="nav-link flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-green-50 hover:text-green-600 transition-colors duration-200">
-                        <svg class="sidebar-icon mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                        ภาพรวม (Dashboard)
-                    </a>
-                    <a href="#customers" class="nav-link flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-green-50 hover:text-green-600 transition-colors duration-200">
-                        <svg class="sidebar-icon mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                        ข้อมูลลูกค้า
-                    </a>
-                    <a href="#map" class="nav-link flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-green-50 hover:text-green-600 transition-colors duration-200">
-                        <svg class="sidebar-icon mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        แผนที่
-                    </a>
-                </nav>
-                <div class="p-4 border-t">
-                    <div id="userInfo" class="flex items-center">
-                        <img id="userAvatar" src="https://placehold.co/40x40/a0aec0/ffffff?text=U" class="rounded-full mr-3">
-                        <div>
-                            <p id="userName" class="font-semibold text-gray-800">ชื่อผู้ใช้</p>
-                            <p id="userRole" class="text-sm text-gray-500">บทบาท</p>
-                        </div>
+                <button id="logoutButton">
+                    <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="p-4">
+            
+            <!-- Dashboard Content -->
+            <div id="dashboard" class="main-page">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">ภาพรวม</h2>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded-xl shadow-md text-center">
+                        <div class="bg-blue-100 p-3 rounded-full inline-block mb-2"><svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>
+                        <p class="text-sm text-gray-500">ร้านค้า</p>
+                        <p id="statStores" class="text-xl font-bold text-gray-800">0</p>
                     </div>
-                    <button id="logoutButton" class="w-full mt-4 text-left flex items-center px-4 py-2 text-sm text-red-600 rounded-lg hover:bg-red-50">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                        ออกจากระบบ
-                    </button>
+                    <div class="bg-white p-4 rounded-xl shadow-md text-center">
+                         <div class="bg-green-100 p-3 rounded-full inline-block mb-2"><svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>
+                        <p class="text-sm text-gray-500">เกษตรกร</p>
+                        <p id="statFarmers" class="text-xl font-bold text-gray-800">0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md text-center">
+                        <div class="bg-yellow-100 p-3 rounded-full inline-block mb-2"><svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>
+                        <p class="text-sm text-gray-500">แปลงทดลอง</p>
+                        <p id="statTrials" class="text-xl font-bold text-gray-800">0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md text-center">
+                        <div class="bg-purple-100 p-3 rounded-full inline-block mb-2"><svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01M12 6v-1m0-1V4m0 2.01M12 18v-1m0-1v-1m0-1v-1m0-1v-1m0-1v-1m0-1v-1m0 1v1m0 1v1m0 1v1m0 1v1M12 20v1m0 1v1M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg></div>
+                        <p class="text-sm text-gray-500">ยอดขาย</p>
+                        <p id="statSales" class="text-xl font-bold text-gray-800">0</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="bg-white p-4 rounded-xl shadow-md h-64">
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">ลูกค้าใหม่</h3>
+                        <canvas id="newCustomersChart"></canvas>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md h-64">
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">ประเภทพืชหลัก</h3>
+                        <canvas id="cropTypesChart"></canvas>
+                    </div>
                 </div>
             </div>
 
-            <!-- Main Content -->
-            <main class="flex-1 p-6 lg:p-8 overflow-y-auto">
+            <!-- Customers Content -->
+            <div id="customers" class="main-page">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">ข้อมูลลูกค้า</h2>
+                    <button id="addCustomerBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center transition-colors duration-300">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        เพิ่ม
+                    </button>
+                </div>
                 
-                <!-- Dashboard Content -->
-                <div id="dashboard" class="main-page">
-                    <h2 class="text-3xl font-bold text-gray-800 mb-6">ภาพรวม (Dashboard)</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-xl shadow-md flex items-center">
-                            <div class="bg-blue-100 p-3 rounded-full mr-4"><svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>
-                            <div>
-                                <p class="text-sm text-gray-500">ร้านค้าในดูแล</p>
-                                <p id="statStores" class="text-2xl font-bold text-gray-800">0</p>
-                            </div>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-md flex items-center">
-                             <div class="bg-green-100 p-3 rounded-full mr-4"><svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>
-                            <div>
-                                <p class="text-sm text-gray-500">เกษตรกรในดูแล</p>
-                                <p id="statFarmers" class="text-2xl font-bold text-gray-800">0</p>
-                            </div>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-md flex items-center">
-                            <div class="bg-yellow-100 p-3 rounded-full mr-4"><svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>
-                            <div>
-                                <p class="text-sm text-gray-500">แปลงทดลอง</p>
-                                <p id="statTrials" class="text-2xl font-bold text-gray-800">0</p>
-                            </div>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-md flex items-center">
-                            <div class="bg-purple-100 p-3 rounded-full mr-4"><svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01M12 6v-1m0-1V4m0 2.01M12 18v-1m0-1v-1m0-1v-1m0-1v-1m0-1v-1m0-1v-1m0 1v1m0 1v1m0 1v1m0 1v1M12 20v1m0 1v1M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg></div>
-                            <div>
-                                <p class="text-sm text-gray-500">ยอดขายปุ๋ย (ตัน/ปี)</p>
-                                <p id="statSales" class="text-2xl font-bold text-gray-800">0</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md flex flex-col h-96">
-                            <h3 class="text-xl font-bold text-gray-800 mb-4 flex-shrink-0">จำนวนลูกค้าใหม่ (รายเดือน)</h3>
-                            <div class="relative flex-grow">
-                                <canvas id="newCustomersChart"></canvas>
-                            </div>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-md flex flex-col h-96">
-                            <h3 class="text-xl font-bold text-gray-800 text-center mb-2 flex-shrink-0">ประเภทพืชหลัก</h3>
-                            <div class="relative flex-grow w-full h-full">
-                                <canvas id="cropTypesChart"></canvas>
-                            </div>
-                        </div>
+                <div class="mb-4">
+                    <div class="grid grid-cols-2 gap-2 rounded-lg bg-gray-200 p-1">
+                        <button id="tabStores" class="tab-link py-2 text-sm font-semibold rounded-md bg-white text-green-600 shadow">ร้านค้า</button>
+                        <button id="tabFarmers" class="tab-link py-2 text-sm font-semibold rounded-md text-gray-600">เกษตรกร</button>
                     </div>
                 </div>
 
-                <!-- Customers Content -->
-                <div id="customers" class="main-page">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-3xl font-bold text-gray-800">ข้อมูลลูกค้า</h2>
-                        <button id="addCustomerBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center transition-colors duration-300">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                            เพิ่มข้อมูลใหม่
-                        </button>
-                    </div>
-                    
-                    <div class="mb-4 border-b border-gray-200">
-                        <nav class="flex space-x-4" aria-label="Tabs">
-                            <a href="#" id="tabStores" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-green-500 text-green-600">ร้านค้า</a>
-                            <a href="#" id="tabFarmers" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">เกษตรกร</a>
-                        </nav>
-                    </div>
-
-                    <div class="mb-4">
-                        <input type="text" id="customerSearch" placeholder="ค้นหาด้วยชื่อ..." class="shadow-sm appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500">
-                    </div>
-
-                    <div class="bg-white rounded-xl shadow-md overflow-x-auto">
-                        <table class="w-full text-left data-table">
-                            <thead id="customerTableHeader" class="bg-gray-50 text-sm font-semibold text-gray-600 uppercase"></thead>
-                            <tbody id="customerTableBody" class="text-gray-700"></tbody>
-                        </table>
-                    </div>
+                <div class="mb-4">
+                    <input type="text" id="customerSearch" placeholder="ค้นหาด้วยชื่อ..." class="shadow-sm appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500">
                 </div>
 
-                <!-- Map Content -->
-                <div id="map" class="main-page">
-                    <h2 class="text-3xl font-bold text-gray-800 mb-6">แผนที่ลูกค้า</h2>
-                    <div id="mapContainer"></div>
+                <div id="customerListContainer" class="space-y-3">
+                    <!-- Customer cards will be rendered here -->
                 </div>
+            </div>
 
-                <!-- Profile Detail Content -->
-                <div id="profileDetail" class="main-page"></div>
+            <!-- Map Content -->
+            <div id="map" class="main-page">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">แผนที่ลูกค้า</h2>
+                <div id="mapContainer"></div>
+            </div>
 
-            </main>
-        </div>
+            <!-- Profile Detail Content -->
+            <div id="profileDetail" class="main-page"></div>
+
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-t border-t border-gray-200 flex justify-around z-10">
+            <a href="#dashboard" class="bottom-nav-link flex-1 flex flex-col items-center justify-center p-2 text-gray-600 hover:bg-green-50">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                <span class="text-xs">ภาพรวม</span>
+            </a>
+            <a href="#customers" class="bottom-nav-link flex-1 flex flex-col items-center justify-center p-2 text-gray-600 hover:bg-green-50">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <span class="text-xs">ลูกค้า</span>
+            </a>
+            <a href="#map" class="bottom-nav-link flex-1 flex flex-col items-center justify-center p-2 text-gray-600 hover:bg-green-50">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span class="text-xs">แผนที่</span>
+            </a>
+        </nav>
     </div>
 
     <!-- Modal for Add/Edit Form -->
-    <div id="formModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-full overflow-y-auto">
-            <div class="p-6 border-b flex justify-between items-center">
-                <h3 id="formTitle" class="text-2xl font-bold text-gray-800">เพิ่มข้อมูลร้านค้าใหม่</h3>
-                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600">&times;</button>
+    <div id="formModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-full overflow-y-auto">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 id="formTitle" class="text-xl font-bold text-gray-800">เพิ่มข้อมูลร้านค้าใหม่</h3>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
-            <form id="customerForm" class="p-6 space-y-6">
+            <form id="customerForm" class="p-4 space-y-4">
                 <div id="formFields"></div>
-                <div class="flex justify-end space-x-4 pt-4 border-t">
+                <div class="flex justify-end space-x-3 pt-4 border-t">
                     <button type="button" id="cancelFormBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg">ยกเลิก</button>
                     <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">บันทึก</button>
                 </div>
@@ -279,9 +249,8 @@ const mainApp = document.getElementById('mainApp');
 const loginForm = document.getElementById('loginForm');
 const logoutButton = document.getElementById('logoutButton');
 const pages = document.querySelectorAll('.main-page');
-const navLinks = document.querySelectorAll('.nav-link');
-const customerTableBody = document.getElementById('customerTableBody');
-const customerTableHeader = document.getElementById('customerTableHeader');
+const navLinks = document.querySelectorAll('.bottom-nav-link');
+const customerListContainer = document.getElementById('customerListContainer');
 const tabStores = document.getElementById('tabStores');
 const tabFarmers = document.getElementById('tabFarmers');
 const customerSearch = document.getElementById('customerSearch');
@@ -341,9 +310,9 @@ function navigateTo(pageId, context = null) {
     navLinks.forEach(link => {
         const linkPageId = link.getAttribute('href').substring(1);
         if (linkPageId === pageId) {
-            link.classList.add('bg-green-100', 'text-green-600', 'font-bold');
+            link.classList.add('active');
         } else {
-            link.classList.remove('bg-green-100', 'text-green-600', 'font-bold');
+            link.classList.remove('active');
         }
     });
 
@@ -444,7 +413,7 @@ function renderCharts(farmersData) {
                         align: 'center',
                         labels: {
                             boxWidth: 12,
-                            padding: 20,
+                            padding: 15,
                             font: {
                                 size: 12
                             }
@@ -462,45 +431,39 @@ function renderCustomerList() {
     
     const filteredData = data.filter(item => item.name.toLowerCase().includes(searchTerm));
 
-    let headers = currentCustomerTab === 'stores'
-        ? ['ชื่อร้านค้า', 'สถานะ', 'พื้นที่ขายหลัก', 'ยอดปุ๋ย (ตัน/ปี)', 'ผู้รับผิดชอบ']
-        : ['ชื่อเกษตรกร', 'พืชที่ปลูก', 'พื้นที่ (ไร่)', 'ผู้รับผิดชอบ', 'ร้านค้าที่ซื้อ'];
-    customerTableHeader.innerHTML = `<tr>${headers.map(h => `<th class="p-4">${h}</th>`).join('')}</tr>`;
-
-    customerTableBody.innerHTML = '';
+    customerListContainer.innerHTML = '';
     if (filteredData.length === 0) {
-        customerTableBody.innerHTML = `<tr><td colspan="${headers.length}" class="text-center p-8 text-gray-500">ไม่พบข้อมูล</td></tr>`;
+        customerListContainer.innerHTML = `<div class="text-center p-8 text-gray-500">ไม่พบข้อมูล</div>`;
         return;
     }
 
     filteredData.forEach(item => {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-gray-50 cursor-pointer';
-        tr.dataset.id = item.id;
-        tr.dataset.type = currentCustomerTab;
-
-        const salesRep = mockData.users.find(u => u.id === item.salesRepId);
+        const card = document.createElement('div');
+        card.className = 'bg-white p-4 rounded-lg shadow-md flex items-center space-x-4';
+        
+        let iconHtml = '';
+        let title = item.name;
+        let subtitle = '';
 
         if (currentCustomerTab === 'stores') {
-            tr.innerHTML = `
-                <td class="p-4 font-semibold text-green-700">${item.name}</td>
-                <td class="p-4"><span class="px-2 py-1 text-xs font-semibold rounded-full ${item.status === 'ร้านใหม่' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}">${item.status}</span></td>
-                <td class="p-4">${item.salesArea}</td>
-                <td class="p-4">${item.fertilizerVolume.toLocaleString()}</td>
-                <td class="p-4">${salesRep ? salesRep.name : 'N/A'}</td>
-            `;
+            iconHtml = `<div class="bg-blue-100 p-3 rounded-full"><svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>`;
+            subtitle = item.salesArea;
         } else {
-            const store = mockData.stores.find(s => s.id === item.storeId);
-            tr.innerHTML = `
-                <td class="p-4 font-semibold text-green-700">${item.name}</td>
-                <td class="p-4">${item.crop}</td>
-                <td class="p-4">${item.area.toLocaleString()}</td>
-                <td class="p-4">${salesRep ? salesRep.name : 'N/A'}</td>
-                <td class="p-4">${store ? store.name : 'N/A'}</td>
-            `;
+            iconHtml = `<div class="bg-green-100 p-3 rounded-full"><svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>`;
+            subtitle = `ปลูก${item.crop} (${item.area} ไร่)`;
         }
-        tr.addEventListener('click', () => navigateTo('profileDetail', { id: item.id, type: tr.dataset.type }));
-        customerTableBody.appendChild(tr);
+
+        card.innerHTML = `
+            ${iconHtml}
+            <div class="flex-1">
+                <p class="font-bold text-gray-800">${title}</p>
+                <p class="text-sm text-gray-500">${subtitle}</p>
+            </div>
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        `;
+        
+        card.addEventListener('click', () => navigateTo('profileDetail', { id: item.id, type: currentCustomerTab }));
+        customerListContainer.appendChild(card);
     });
 }
 
@@ -593,31 +556,31 @@ function renderProfileDetail(context) {
 
     // Header
     const headerDiv = document.createElement('div');
-    headerDiv.className = 'flex justify-between items-start mb-6';
+    headerDiv.className = 'flex justify-between items-start mb-4';
     
     const titleDiv = document.createElement('div');
     const backButton = document.createElement('button');
-    backButton.className = 'text-green-600 hover:text-green-800 flex items-center mb-2';
-    backButton.innerHTML = `<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> กลับไปหน้ารายชื่อ`;
+    backButton.className = 'text-green-600 hover:text-green-800 flex items-center mb-2 text-sm';
+    backButton.innerHTML = `<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg> กลับ`;
     backButton.addEventListener('click', () => navigateTo('customers'));
     
     const h2 = document.createElement('h2');
-    h2.className = 'text-3xl font-bold text-gray-800';
+    h2.className = 'text-2xl font-bold text-gray-800';
     h2.textContent = item.name;
     
     titleDiv.appendChild(backButton);
     titleDiv.appendChild(h2);
     
     const editButton = document.createElement('button');
-    editButton.className = 'bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg';
-    editButton.textContent = 'แก้ไขข้อมูล';
+    editButton.className = 'bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-lg text-sm';
+    editButton.textContent = 'แก้ไข';
     
     headerDiv.appendChild(titleDiv);
     headerDiv.appendChild(editButton);
     
     // Content Container
     const contentDiv = document.createElement('div');
-    contentDiv.className = 'bg-white p-8 rounded-xl shadow-md';
+    contentDiv.className = 'bg-white p-4 rounded-xl shadow-md';
 
     if (type === 'stores') {
         const owner = mockData.owners.find(o => o.id === item.ownerId);
@@ -634,14 +597,14 @@ function createDetailRow(label, value) {
     if (value === undefined || value === null || value === '') return null;
     
     const div = document.createElement('div');
-    div.className = 'grid grid-cols-3 gap-4 py-3 border-b border-gray-100';
+    div.className = 'flex justify-between py-3 border-b border-gray-100';
 
     const dt = document.createElement('dt');
     dt.className = 'text-sm font-medium text-gray-500';
     dt.textContent = label;
 
     const dd = document.createElement('dd');
-    dd.className = 'mt-1 text-sm text-gray-900 col-span-2';
+    dd.className = 'text-sm text-gray-900 text-right';
     
     if (typeof value === 'object' && value !== null && value.nodeType === 1) {
         dd.appendChild(value);
@@ -658,13 +621,13 @@ function renderStoreProfile(container, store, owner) {
     const linkedFarmers = mockData.farmers.filter(f => f.storeId === store.id);
     const createHeading = (text) => {
         const h3 = document.createElement('h3');
-        h3.className = 'text-xl font-bold text-gray-800 mt-8 mb-4 border-b pb-2';
+        h3.className = 'text-lg font-bold text-gray-800 mt-6 mb-2 border-b pb-2';
         h3.textContent = text;
         return h3;
     };
 
     const h3Store = createHeading('ข้อมูลร้านค้า');
-    h3Store.classList.remove('mt-8');
+    h3Store.classList.remove('mt-6');
     container.appendChild(h3Store);
     const dlStore = document.createElement('dl');
     
@@ -739,13 +702,13 @@ function renderFarmerProfile(container, farmer) {
     const linkedTrials = mockData.trialPlots.filter(t => t.farmerId === farmer.id);
     const createHeading = (text) => {
         const h3 = document.createElement('h3');
-        h3.className = 'text-xl font-bold text-gray-800 mt-8 mb-4 border-b pb-2';
+        h3.className = 'text-lg font-bold text-gray-800 mt-6 mb-2 border-b pb-2';
         h3.textContent = text;
         return h3;
     };
     
     const h3Farmer = createHeading('ข้อมูลเกษตรกร');
-    h3Farmer.classList.remove('mt-8');
+    h3Farmer.classList.remove('mt-6');
     container.appendChild(h3Farmer);
     
     const dlFarmer = document.createElement('dl');
@@ -781,11 +744,11 @@ function renderFarmerProfile(container, farmer) {
             trialDiv.innerHTML = `
                 <h4 class="font-bold">แปลงทดลอง: ${t.crop} (ปุ๋ย: ${t.fertilizer})</h4>
                 <p class="text-sm text-gray-600">ช่วงเวลา: ${t.period}</p>
-                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="mt-4 grid grid-cols-1 gap-2">
                     <div><p class="font-semibold">ผลที่คาดหวัง:</p><p>${t.expectedResult}</p></div>
                     <div><p class="font-semibold">ผลลัพธ์:</p><p class="${t.resultMetExpectations ? 'text-green-600' : 'text-red-600'}">${t.resultMetExpectations ? 'เป็นไปตามคาด' : 'ไม่เป็นไปตามคาด'}</p></div>
-                    <div class="md:col-span-2"><p class="font-semibold">การเปลี่ยนแปลงของพืช:</p><p>${t.plantChange}</p></div>
-                    <div class="md:col-span-2"><p class="font-semibold">โอกาสที่จะซื้อหลังทดลอง:</p><div class="flex items-center">${[...Array(5)].map((_, i) => `<svg class="w-5 h-5 ${i < t.purchaseChance ? 'text-yellow-400' : 'text-gray-300'}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>`).join('')}</div></div>
+                    <div><p class="font-semibold">การเปลี่ยนแปลงของพืช:</p><p>${t.plantChange}</p></div>
+                    <div><p class="font-semibold">โอกาสที่จะซื้อหลังทดลอง:</p><div class="flex items-center">${[...Array(5)].map((_, i) => `<svg class="w-5 h-5 ${i < t.purchaseChance ? 'text-yellow-400' : 'text-gray-300'}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>`).join('')}</div></div>
                 </div>`;
             container.appendChild(trialDiv);
         });
@@ -854,20 +817,20 @@ customerForm.addEventListener('submit', (e) => {
 tabStores.addEventListener('click', (e) => {
     e.preventDefault();
     currentCustomerTab = 'stores';
-    tabStores.classList.add('border-green-500', 'text-green-600');
-    tabStores.classList.remove('border-transparent', 'text-gray-500');
-    tabFarmers.classList.remove('border-green-500', 'text-green-600');
-    tabFarmers.classList.add('border-transparent', 'text-gray-500');
+    tabStores.classList.add('bg-white', 'text-green-600', 'shadow');
+    tabStores.classList.remove('text-gray-600');
+    tabFarmers.classList.remove('bg-white', 'text-green-600', 'shadow');
+    tabFarmers.classList.add('text-gray-600');
     renderCustomerList();
 });
 
 tabFarmers.addEventListener('click', (e) => {
     e.preventDefault();
     currentCustomerTab = 'farmers';
-    tabFarmers.classList.add('border-green-500', 'text-green-600');
-    tabFarmers.classList.remove('border-transparent', 'text-gray-500');
-    tabStores.classList.remove('border-green-500', 'text-green-600');
-    tabStores.classList.add('border-transparent', 'text-gray-500');
+    tabFarmers.classList.add('bg-white', 'text-green-600', 'shadow');
+    tabFarmers.classList.remove('text-gray-600');
+    tabStores.classList.remove('bg-white', 'text-green-600', 'shadow');
+    tabStores.classList.add('text-gray-600');
     renderCustomerList();
 });
 
