@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advance Fertilizer - Prototype</title>
+    <!-- The title will be set by Code.gs -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -357,7 +357,7 @@ function navigateTo(pageId, context = null) {
             renderCustomerList();
             break;
         case 'map':
-            renderMapPage();
+            renderMapPage({ centerOn: context ? context.gps : null });
             break;
         case 'profileDetail':
             renderProfileDetail(context);
@@ -499,12 +499,12 @@ function renderCustomerList() {
                 <td class="p-4">${store ? store.name : 'N/A'}</td>
             `;
         }
-        tr.addEventListener('click', () => navigateTo('profileDetail', { id: item.id, type: currentCustomerTab }));
+        tr.addEventListener('click', () => navigateTo('profileDetail', { id: item.id, type: tr.dataset.type }));
         customerTableBody.appendChild(tr);
     });
 }
 
-function renderMapPage() {
+function renderMapPage(options = {}) {
     if (!mapInstance) {
         mapInstance = L.map('mapContainer').setView([13.7563, 100.5018], 8);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -552,7 +552,10 @@ function renderMapPage() {
         }
     });
 
-    if (navigator.geolocation) {
+    if (options.centerOn) {
+        const [lat, lng] = options.centerOn.split(',').map(Number);
+        mapInstance.setView([lat, lng], 15);
+    } else if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const { latitude, longitude } = position.coords;
@@ -563,6 +566,9 @@ function renderMapPage() {
                     .addTo(mapInstance)
                     .bindPopup('<b>ตำแหน่งของคุณ</b>')
                     .openPopup();
+                 if (!options.centerOn) {
+                    mapInstance.setView([latitude, longitude], 13);
+                 }
             },
             () => {
                 console.log("ไม่สามารถเข้าถึงตำแหน่งได้");
@@ -577,139 +583,218 @@ function renderMapPage() {
 function renderProfileDetail(context) {
     const { id, type } = context;
     const item = mockData[type].find(i => i.id === id);
+    
+    profileDetailPage.innerHTML = ''; // Clear previous content
+
     if (!item) {
         profileDetailPage.innerHTML = `<p>ไม่พบข้อมูล</p>`;
         return;
     }
 
-    let html = `
-        <div class="flex justify-between items-start mb-6">
-            <div>
-                <button id="backToListBtn" class="text-green-600 hover:text-green-800 flex items-center mb-2">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                    กลับไปหน้ารายชื่อ
-                </button>
-                <h2 class="text-3xl font-bold text-gray-800">${item.name}</h2>
-            </div>
-            <button class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">แก้ไขข้อมูล</button>
-        </div>
-        <div class="bg-white p-8 rounded-xl shadow-md">
-    `;
+    // Header
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'flex justify-between items-start mb-6';
+    
+    const titleDiv = document.createElement('div');
+    const backButton = document.createElement('button');
+    backButton.className = 'text-green-600 hover:text-green-800 flex items-center mb-2';
+    backButton.innerHTML = `<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> กลับไปหน้ารายชื่อ`;
+    backButton.addEventListener('click', () => navigateTo('customers'));
+    
+    const h2 = document.createElement('h2');
+    h2.className = 'text-3xl font-bold text-gray-800';
+    h2.textContent = item.name;
+    
+    titleDiv.appendChild(backButton);
+    titleDiv.appendChild(h2);
+    
+    const editButton = document.createElement('button');
+    editButton.className = 'bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg';
+    editButton.textContent = 'แก้ไขข้อมูล';
+    
+    headerDiv.appendChild(titleDiv);
+    headerDiv.appendChild(editButton);
+    
+    // Content Container
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'bg-white p-8 rounded-xl shadow-md';
 
     if (type === 'stores') {
         const owner = mockData.owners.find(o => o.id === item.ownerId);
-        html += renderStoreProfile(item, owner);
+        renderStoreProfile(contentDiv, item, owner);
     } else { // farmers
-        html += renderFarmerProfile(item);
+        renderFarmerProfile(contentDiv, item);
     }
-
-    html += `</div>`;
-    profileDetailPage.innerHTML = html;
-
-    document.getElementById('backToListBtn').addEventListener('click', () => navigateTo('customers'));
+    
+    profileDetailPage.appendChild(headerDiv);
+    profileDetailPage.appendChild(contentDiv);
 }
 
-function renderDetailRow(label, value) {
-    if (value === undefined || value === null || value === '') return '';
-    return `<div class="grid grid-cols-3 gap-4 py-3 border-b border-gray-100">
-                <dt class="text-sm font-medium text-gray-500">${label}</dt>
-                <dd class="mt-1 text-sm text-gray-900 col-span-2">${value}</dd>
-            </div>`;
+function createDetailRow(label, value) {
+    if (value === undefined || value === null || value === '') return null;
+    
+    const div = document.createElement('div');
+    div.className = 'grid grid-cols-3 gap-4 py-3 border-b border-gray-100';
+
+    const dt = document.createElement('dt');
+    dt.className = 'text-sm font-medium text-gray-500';
+    dt.textContent = label;
+
+    const dd = document.createElement('dd');
+    dd.className = 'mt-1 text-sm text-gray-900 col-span-2';
+    
+    if (typeof value === 'object' && value !== null && value.nodeType === 1) {
+        dd.appendChild(value);
+    } else {
+        dd.textContent = value;
+    }
+    
+    div.appendChild(dt);
+    div.appendChild(dd);
+    return div;
 }
 
-function renderStoreProfile(store, owner) {
+function renderStoreProfile(container, store, owner) {
     const linkedFarmers = mockData.farmers.filter(f => f.storeId === store.id);
-    return `
-        <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">ข้อมูลร้านค้า</h3>
-        <dl>
-            ${renderDetailRow('สถานะ', store.status)}
-            ${renderDetailRow('ขนาดร้าน', store.size)}
-            ${renderDetailRow('เปิดมากี่ปี', `${store.yearsOpen} ปี`)}
-            ${renderDetailRow('สินค้าหลัก', store.mainProducts)}
-            ${renderDetailRow('ยอดปุ๋ยต่อปี', `${store.fertilizerVolume.toLocaleString()} ตัน`)}
-            ${renderDetailRow('การจ่ายเงิน', store.payment)}
-            ${renderDetailRow('พืชหลักในพื้นที่', store.mainCrops)}
-            ${renderDetailRow('ลักษณะการขาย', store.salesStyle)}
-            ${renderDetailRow('มีซาปั๊วหรือไม่', store.hasSubDealer ? 'มี' : 'ไม่มี')}
-            ${renderDetailRow('มีแบรนด์ตัวเอง', store.hasOwnBrand ? 'มี' : 'ไม่มี')}
-            ${renderDetailRow('ลักษณะร้าน', store.ownership)}
-            ${renderDetailRow('ที่อยู่ (GPS)', `<a href="#" class="text-blue-500" onclick="navigateTo('map'); mapInstance.setView([${store.gps}], 15);">${store.gps}</a>`)}
-        </dl>
-        
-        ${owner ? `
-        <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4 border-b pb-2">ข้อมูลเจ้าของร้าน</h3>
-        <dl>
-            ${renderDetailRow('ชื่อ-สกุล', owner.name)}
-            ${renderDetailRow('เบอร์โทร', owner.phone)}
-            ${renderDetailRow('เพศ/อายุ', `${owner.gender} / ${owner.age} ปี`)}
-            ${renderDetailRow('รุ่นที่', owner.generation)}
-            ${renderDetailRow('สถานะ', owner.maritalStatus)}
-            ${renderDetailRow('งานอดิเรก', owner.hobby)}
-            ${renderDetailRow('บุคลิก', owner.personality.join(', '))}
-            ${renderDetailRow('แนวคิดการตลาด', owner.marketingConcept)}
-        </dl>
-        ` : ''}
+    const createHeading = (text) => {
+        const h3 = document.createElement('h3');
+        h3.className = 'text-xl font-bold text-gray-800 mt-8 mb-4 border-b pb-2';
+        h3.textContent = text;
+        return h3;
+    };
 
-        <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4 border-b pb-2">เกษตรกรในเครือ (${linkedFarmers.length})</h3>
-        <ul class="divide-y divide-gray-200">
-            ${linkedFarmers.map(f => `
-                <li class="py-3 flex justify-between items-center">
-                    <span>${f.name} (ปลูก${f.crop} ${f.area} ไร่)</span>
-                    <button class="text-sm text-blue-500 hover:underline" onclick="navigateTo('profileDetail', {id: '${f.id}', type: 'farmers'})">ดูโปรไฟล์</button>
-                </li>
-            `).join('') || '<li class="py-3 text-gray-500">ไม่มีข้อมูลเกษตรกรในเครือ</li>'}
-        </ul>
-    `;
+    const h3Store = createHeading('ข้อมูลร้านค้า');
+    h3Store.classList.remove('mt-8');
+    container.appendChild(h3Store);
+    const dlStore = document.createElement('dl');
+    
+    const gpsLink = document.createElement('a');
+    gpsLink.href = '#';
+    gpsLink.className = 'text-blue-500';
+    gpsLink.textContent = store.gps;
+    gpsLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigateTo('map', { gps: store.gps });
+    });
+
+    [
+        createDetailRow('สถานะ', store.status),
+        createDetailRow('ขนาดร้าน', store.size),
+        createDetailRow('เปิดมากี่ปี', `${store.yearsOpen} ปี`),
+        createDetailRow('สินค้าหลัก', store.mainProducts),
+        createDetailRow('ยอดปุ๋ยต่อปี', `${store.fertilizerVolume.toLocaleString()} ตัน`),
+        createDetailRow('การจ่ายเงิน', store.payment),
+        createDetailRow('พืชหลักในพื้นที่', store.mainCrops),
+        createDetailRow('ลักษณะการขาย', store.salesStyle),
+        createDetailRow('มีซาปั๊วหรือไม่', store.hasSubDealer ? 'มี' : 'ไม่มี'),
+        createDetailRow('มีแบรนด์ตัวเอง', store.hasOwnBrand ? 'มี' : 'ไม่มี'),
+        createDetailRow('ลักษณะร้าน', store.ownership),
+        createDetailRow('ที่อยู่ (GPS)', gpsLink)
+    ].forEach(row => { if(row) dlStore.appendChild(row); });
+    container.appendChild(dlStore);
+    
+    if (owner) {
+        container.appendChild(createHeading('ข้อมูลเจ้าของร้าน'));
+        const dlOwner = document.createElement('dl');
+        [
+            createDetailRow('ชื่อ-สกุล', owner.name),
+            createDetailRow('เบอร์โทร', owner.phone),
+            createDetailRow('เพศ/อายุ', `${owner.gender} / ${owner.age} ปี`),
+            createDetailRow('รุ่นที่', owner.generation),
+            createDetailRow('สถานะ', owner.maritalStatus),
+            createDetailRow('งานอดิเรก', owner.hobby),
+            createDetailRow('บุคลิก', owner.personality.join(', ')),
+            createDetailRow('แนวคิดการตลาด', owner.marketingConcept)
+        ].forEach(row => { if(row) dlOwner.appendChild(row); });
+        container.appendChild(dlOwner);
+    }
+    
+    container.appendChild(createHeading(`เกษตรกรในเครือ (${linkedFarmers.length})`));
+    const ulFarmers = document.createElement('ul');
+    ulFarmers.className = 'divide-y divide-gray-200';
+    if (linkedFarmers.length > 0) {
+        linkedFarmers.forEach(f => {
+            const li = document.createElement('li');
+            li.className = 'py-3 flex justify-between items-center';
+            const span = document.createElement('span');
+            span.textContent = `${f.name} (ปลูก${f.crop} ${f.area} ไร่)`;
+            const button = document.createElement('button');
+            button.className = 'text-sm text-blue-500 hover:underline';
+            button.textContent = 'ดูโปรไฟล์';
+            button.addEventListener('click', () => navigateTo('profileDetail', { id: f.id, type: 'farmers' }));
+            li.appendChild(span);
+            li.appendChild(button);
+            ulFarmers.appendChild(li);
+        });
+    } else {
+        const li = document.createElement('li');
+        li.className = 'py-3 text-gray-500';
+        li.textContent = 'ไม่มีข้อมูลเกษตรกรในเครือ';
+        ulFarmers.appendChild(li);
+    }
+    container.appendChild(ulFarmers);
 }
 
-function renderFarmerProfile(farmer) {
+function renderFarmerProfile(container, farmer) {
     const linkedTrials = mockData.trialPlots.filter(t => t.farmerId === farmer.id);
-    return `
-        <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">ข้อมูลเกษตรกร</h3>
-        <dl>
-            ${renderDetailRow('เบอร์โทร', farmer.phone)}
-            ${renderDetailRow('ที่อยู่', farmer.address)}
-            ${renderDetailRow('เพศ/อายุ', `${farmer.gender} / ${farmer.age} ปี`)}
-            ${renderDetailRow('พืชที่ปลูก', `${farmer.crop} (${farmer.area} ไร่)`)}
-            ${renderDetailRow('ประเภทปุ๋ยที่ใช้', farmer.fertilizerType)}
-            ${renderDetailRow('ความถี่การใช้ปุ๋ย', farmer.fertilizerFreq)}
-            ${renderDetailRow('ช่วงเวลาที่ใช้', farmer.fertilizerTiming)}
-            ${renderDetailRow('บทบาทในพื้นที่', farmer.roleInCommunity)}
-            ${renderDetailRow('ความคิดเรื่องปุ๋ยอินทรีย์', farmer.organicOpinion)}
-            ${renderDetailRow('อาชีพอื่นๆ', farmer.otherJobs)}
-            ${renderDetailRow('ที่อยู่ (GPS)', `<a href="#" class="text-blue-500" onclick="navigateTo('map'); mapInstance.setView([${farmer.gps}], 15);">${farmer.gps}</a>`)}
-        </dl>
+    const createHeading = (text) => {
+        const h3 = document.createElement('h3');
+        h3.className = 'text-xl font-bold text-gray-800 mt-8 mb-4 border-b pb-2';
+        h3.textContent = text;
+        return h3;
+    };
+    
+    const h3Farmer = createHeading('ข้อมูลเกษตรกร');
+    h3Farmer.classList.remove('mt-8');
+    container.appendChild(h3Farmer);
+    
+    const dlFarmer = document.createElement('dl');
+    const gpsLink = document.createElement('a');
+    gpsLink.href = '#';
+    gpsLink.className = 'text-blue-500';
+    gpsLink.textContent = farmer.gps;
+    gpsLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigateTo('map', { gps: farmer.gps });
+    });
 
-        <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4 border-b pb-2">ประวัติแปลงทดลอง (${linkedTrials.length})</h3>
-        ${linkedTrials.map(t => `
-            <div class="p-4 border rounded-lg mb-4 bg-gray-50">
+    [
+        createDetailRow('เบอร์โทร', farmer.phone),
+        createDetailRow('ที่อยู่', farmer.address),
+        createDetailRow('เพศ/อายุ', `${farmer.gender} / ${farmer.age} ปี`),
+        createDetailRow('พืชที่ปลูก', `${farmer.crop} (${farmer.area} ไร่)`),
+        createDetailRow('ประเภทปุ๋ยที่ใช้', farmer.fertilizerType),
+        createDetailRow('ความถี่การใช้ปุ๋ย', farmer.fertilizerFreq),
+        createDetailRow('ช่วงเวลาที่ใช้', farmer.fertilizerTiming),
+        createDetailRow('บทบาทในพื้นที่', farmer.roleInCommunity),
+        createDetailRow('ความคิดเรื่องปุ๋ยอินทรีย์', farmer.organicOpinion),
+        createDetailRow('อาชีพอื่นๆ', farmer.otherJobs),
+        createDetailRow('ที่อยู่ (GPS)', gpsLink)
+    ].forEach(row => { if (row) dlFarmer.appendChild(row); });
+    container.appendChild(dlFarmer);
+
+    container.appendChild(createHeading(`ประวัติแปลงทดลอง (${linkedTrials.length})`));
+    if (linkedTrials.length > 0) {
+        linkedTrials.forEach(t => {
+            const trialDiv = document.createElement('div');
+            trialDiv.className = 'p-4 border rounded-lg mb-4 bg-gray-50';
+            trialDiv.innerHTML = `
                 <h4 class="font-bold">แปลงทดลอง: ${t.crop} (ปุ๋ย: ${t.fertilizer})</h4>
                 <p class="text-sm text-gray-600">ช่วงเวลา: ${t.period}</p>
                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <p class="font-semibold">ผลที่คาดหวัง:</p>
-                        <p>${t.expectedResult}</p>
-                    </div>
-                    <div>
-                        <p class="font-semibold">ผลลัพธ์:</p>
-                        <p class="${t.resultMetExpectations ? 'text-green-600' : 'text-red-600'}">
-                            ${t.resultMetExpectations ? 'เป็นไปตามคาด' : 'ไม่เป็นไปตามคาด'}
-                        </p>
-                    </div>
-                    <div class="md:col-span-2">
-                        <p class="font-semibold">การเปลี่ยนแปลงของพืช:</p>
-                        <p>${t.plantChange}</p>
-                    </div>
-                    <div class="md:col-span-2">
-                        <p class="font-semibold">โอกาสที่จะซื้อหลังทดลอง:</p>
-                        <div class="flex items-center">
-                            ${[...Array(5)].map((_, i) => `<svg class="w-5 h-5 ${i < t.purchaseChance ? 'text-yellow-400' : 'text-gray-300'}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>`).join('')}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `).join('') || '<p class="text-gray-500">ไม่มีข้อมูลแปลงทดลอง</p>'}
-    `;
+                    <div><p class="font-semibold">ผลที่คาดหวัง:</p><p>${t.expectedResult}</p></div>
+                    <div><p class="font-semibold">ผลลัพธ์:</p><p class="${t.resultMetExpectations ? 'text-green-600' : 'text-red-600'}">${t.resultMetExpectations ? 'เป็นไปตามคาด' : 'ไม่เป็นไปตามคาด'}</p></div>
+                    <div class="md:col-span-2"><p class="font-semibold">การเปลี่ยนแปลงของพืช:</p><p>${t.plantChange}</p></div>
+                    <div class="md:col-span-2"><p class="font-semibold">โอกาสที่จะซื้อหลังทดลอง:</p><div class="flex items-center">${[...Array(5)].map((_, i) => `<svg class="w-5 h-5 ${i < t.purchaseChance ? 'text-yellow-400' : 'text-gray-300'}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>`).join('')}</div></div>
+                </div>`;
+            container.appendChild(trialDiv);
+        });
+    } else {
+        const p = document.createElement('p');
+        p.className = 'text-gray-500';
+        p.textContent = 'ไม่มีข้อมูลแปลงทดลอง';
+        container.appendChild(p);
+    }
 }
 
 // --- MODAL & FORM HANDLING ---
