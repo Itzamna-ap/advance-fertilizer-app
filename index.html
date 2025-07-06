@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advance Fertilizer - Prototype</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f7fafc;
+        }
+        .sidebar-icon {
+            width: 24px;
+            height: 24px;
+        }
+        .data-table th, .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .data-table tbody tr:hover {
+            background-color: #f1f5f9;
+            cursor: pointer;
+        }
+        .main-page {
+            display: none;
+        }
+        .main-page.active {
+            display: block;
+        }
+        .modal {
+            display: none;
+        }
+        .modal.active {
+            display: flex;
+        }
+        #mapContainer {
+            height: 80vh;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Page -->
+    <div id="loginPage" class="flex items-center justify-center h-screen bg-gray-100">
+        <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
+            <div class="text-center mb-8">
+                <div class="inline-block bg-green-100 p-3 rounded-full">
+                    <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2h1a2 2 0 002-2v-1a2 2 0 012-2h1.945M7.881 4.002l.023.023a1 1 0 01.023 1.414l-1.06 1.06a1 1 0 01-1.414 0l-1.06-1.06a1 1 0 010-1.414l1.06-1.06a1 1 0 011.414.023zM16.119 4.002l-1.06 1.06a1 1 0 01-1.414 0l-1.06-1.06a1 1 0 010-1.414l1.06-1.06a1 1 0 011.414 0l1.06 1.06a1 1 0 01.023 1.414zM12 21a9 9 0 110-18 9 9 0 010 18z"></path></svg>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800 mt-4">Advance Fertilizer</h1>
+                <p class="text-gray-500">โปรดเข้าสู่ระบบเพื่อใช้งาน</p>
+            </div>
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label for="username" class="block text-gray-700 text-sm font-bold mb-2">ชื่อผู้ใช้:</label>
+                    <select id="username" class="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option value="sales01">พนักงานขาย (ทีม A)</option>
+                        <option value="manager01">ผู้จัดการเขต (ทีม A)</option>
+                        <option value="admin01">Admin</option>
+                    </select>
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-gray-700 text-sm font-bold mb-2">รหัสผ่าน:</label>
+                    <input type="password" id="password" value="123" class="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <p class="text-xs text-gray-500">ใช้รหัสผ่าน: 123 สำหรับทุกบัญชี</p>
+                </div>
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-300">
+                    เข้าสู่ระบบ
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Structure -->
+    <div id="mainApp" class="hidden">
+        <div class="flex h-screen bg-gray-100">
+            <!-- Sidebar -->
+            <div class="w-64 bg-white shadow-md flex flex-col">
+                <div class="p-6 text-center border-b">
+                     <h1 class="text-2xl font-bold text-green-600">Advance Fertilizer</h1>
+                </div>
+                <nav class="flex-1 px-4 py-6 space-y-2">
+                    <a href="#dashboard" class="nav-link flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-green-50 hover:text-green-600 transition-colors duration-200">
+                        <svg class="sidebar-icon mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                        ภาพรวม (Dashboard)
+                    </a>
+                    <a href="#customers" class="nav-link flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-green-50 hover:text-green-600 transition-colors duration-200">
+                        <svg class="sidebar-icon mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        ข้อมูลลูกค้า
+                    </a>
+                    <a href="#map" class="nav-link flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-green-50 hover:text-green-600 transition-colors duration-200">
+                        <svg class="sidebar-icon mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        แผนที่
+                    </a>
+                </nav>
+                <div class="p-4 border-t">
+                    <div id="userInfo" class="flex items-center">
+                        <img id="userAvatar" src="https://placehold.co/40x40/a0aec0/ffffff?text=U" class="rounded-full mr-3">
+                        <div>
+                            <p id="userName" class="font-semibold text-gray-800">ชื่อผู้ใช้</p>
+                            <p id="userRole" class="text-sm text-gray-500">บทบาท</p>
+                        </div>
+                    </div>
+                    <button id="logoutButton" class="w-full mt-4 text-left flex items-center px-4 py-2 text-sm text-red-600 rounded-lg hover:bg-red-50">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        ออกจากระบบ
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <main class="flex-1 p-6 lg:p-8 overflow-y-auto">
+                
+                <!-- Dashboard Content -->
+                <div id="dashboard" class="main-page">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">ภาพรวม (Dashboard)</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl shadow-md flex items-center">
+                            <div class="bg-blue-100 p-3 rounded-full mr-4"><svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>
+                            <div>
+                                <p class="text-sm text-gray-500">ร้านค้าในดูแล</p>
+                                <p id="statStores" class="text-2xl font-bold text-gray-800">0</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-md flex items-center">
+                             <div class="bg-green-100 p-3 rounded-full mr-4"><svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>
+                            <div>
+                                <p class="text-sm text-gray-500">เกษตรกรในดูแล</p>
+                                <p id="statFarmers" class="text-2xl font-bold text-gray-800">0</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-md flex items-center">
+                            <div class="bg-yellow-100 p-3 rounded-full mr-4"><svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>
+                            <div>
+                                <p class="text-sm text-gray-500">แปลงทดลอง</p>
+                                <p id="statTrials" class="text-2xl font-bold text-gray-800">0</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-md flex items-center">
+                            <div class="bg-purple-100 p-3 rounded-full mr-4"><svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01M12 6v-1m0-1V4m0 2.01M12 18v-1m0-1v-1m0-1v-1m0-1v-1m0-1v-1m0-1v-1m0 1v1m0 1v1m0 1v1m0 1v1M12 20v1m0 1v1M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg></div>
+                            <div>
+                                <p class="text-sm text-gray-500">ยอดขายปุ๋ย (ตัน/ปี)</p>
+                                <p id="statSales" class="text-2xl font-bold text-gray-800">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md flex flex-col h-96">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4 flex-shrink-0">จำนวนลูกค้าใหม่ (รายเดือน)</h3>
+                            <div class="relative flex-grow">
+                                <canvas id="newCustomersChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-md flex flex-col h-96">
+                            <h3 class="text-xl font-bold text-gray-800 text-center mb-2 flex-shrink-0">ประเภทพืชหลัก</h3>
+                            <div class="relative flex-grow w-full h-full">
+                                <canvas id="cropTypesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customers Content -->
+                <div id="customers" class="main-page">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-3xl font-bold text-gray-800">ข้อมูลลูกค้า</h2>
+                        <button id="addCustomerBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center transition-colors duration-300">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                            เพิ่มข้อมูลใหม่
+                        </button>
+                    </div>
+                    
+                    <div class="mb-4 border-b border-gray-200">
+                        <nav class="flex space-x-4" aria-label="Tabs">
+                            <a href="#" id="tabStores" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-green-500 text-green-600">ร้านค้า</a>
+                            <a href="#" id="tabFarmers" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">เกษตรกร</a>
+                        </nav>
+                    </div>
+
+                    <div class="mb-4">
+                        <input type="text" id="customerSearch" placeholder="ค้นหาด้วยชื่อ..." class="shadow-sm appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+                        <table class="w-full text-left data-table">
+                            <thead id="customerTableHeader" class="bg-gray-50 text-sm font-semibold text-gray-600 uppercase"></thead>
+                            <tbody id="customerTableBody" class="text-gray-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Map Content -->
+                <div id="map" class="main-page">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">แผนที่ลูกค้า</h2>
+                    <div id="mapContainer"></div>
+                </div>
+
+                <!-- Profile Detail Content -->
+                <div id="profileDetail" class="main-page"></div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal for Add/Edit Form -->
+    <div id="formModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-full overflow-y-auto">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 id="formTitle" class="text-2xl font-bold text-gray-800">เพิ่มข้อมูลร้านค้าใหม่</h3>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600">&times;</button>
+            </div>
+            <form id="customerForm" class="p-6 space-y-6">
+                <div id="formFields"></div>
+                <div class="flex justify-end space-x-4 pt-4 border-t">
+                    <button type="button" id="cancelFormBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg">ยกเลิก</button>
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">บันทึก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+<script>
+// --- MOCK DATA ---
+const mockData = {
+    users: [
+        { id: 'admin01', name: 'แอดมิน สูงสุด', role: 'admin', password: '123', teamId: null },
+        { id: 'manager01', name: 'สมศักดิ์ เก่งกาจ', role: 'manager', password: '123', teamId: 'A' },
+        { id: 'sales01', name: 'มานะ ใจดี', role: 'sales', password: '123', teamId: 'A' },
+        { id: 'sales02', name: 'ปิติ ยินดี', role: 'sales', password: '123', teamId: 'B' },
+    ],
+    stores: [
+        { id: 's001', name: 'รุ่งเรืองการเกษตร', status: 'ร้านเก่า', gps: '13.7563, 100.5018', size: 'ใหญ่', yearsOpen: 10, mainProducts: 'ปุ๋ย, ยาฆ่าแมลง', fertilizerVolume: 500, payment: 'เงินสด, เครดิต 30 วัน', mainCrops: 'ข้าว, อ้อย', salesArea: 'นครปฐม, สุพรรณบุรี', salesStyle: 'ขายส่งและปลีก', hasSubDealer: true, hasOwnBrand: false, ownership: 'ร้านตัวเอง', ownerId: 'own01', salesRepId: 'sales01', teamId: 'A' },
+        { id: 's002', name: 'เพื่อนเกษตรกร', status: 'ร้านใหม่', gps: '14.0672, 100.6225', size: 'กลาง', yearsOpen: 1, mainProducts: 'ปุ๋ยอินทรีย์, เมล็ดพันธุ์', fertilizerVolume: 50, payment: 'เงินสด', mainCrops: 'ผัก, ผลไม้', salesArea: 'ปทุมธานี', salesStyle: 'ขายปลีก', hasSubDealer: false, hasOwnBrand: true, ownership: 'เช่า', ownerId: 'own02', salesRepId: 'sales01', teamId: 'A' },
+        { id: 's003', name: 'เกษตรพัฒนา', status: 'ร้านเก่า', gps: '16.8211, 100.2653', size: 'ใหญ่', yearsOpen: 15, mainProducts: 'ปุ๋ยเคมี', fertilizerVolume: 800, payment: 'เครดิต 60 วัน', mainCrops: 'ข้าวโพด', salesArea: 'พิษณุโลก', salesStyle: 'ขายส่ง', hasSubDealer: true, hasOwnBrand: false, ownership: 'ร้านตัวเอง', ownerId: 'own03', salesRepId: 'sales02', teamId: 'B' },
+    ],
+    owners: [
+        { id: 'own01', name: 'นายวิชัย รุ่งเรือง', phone: '081-234-5678', gender: 'ชาย', age: 55, generation: 2, maritalStatus: 'แต่งงานแล้ว, ลูก 2 คน', social: 'ชอบสังสรรค์', hobby: 'ตีกอล์ฟ', sport: 'กอล์ฟ', personality: ['ชอบข้อมูล', 'ชอบต่อราคา'], marketingConcept: 'เน้นความสัมพันธ์ลูกค้าเก่าและเครดิต' },
+        { id: 'own02', name: 'นางสาวอารี เพื่อนแท้', phone: '082-345-6789', gender: 'หญิง', age: 35, generation: 1, maritalStatus: 'โสด', social: 'ไม่ค่อย', hobby: 'อ่านหนังสือ, ปลูกต้นไม้', sport: 'โยคะ', personality: ['ชอบข้อมูล', 'ชอบทดลอง'], marketingConcept: 'เน้นสินค้าคุณภาพและนวัตกรรมใหม่ๆ' },
+        { id: 'own03', name: 'นายบรรจง พัฒนา', phone: '083-456-7890', gender: 'ชาย', age: 62, generation: 1, maritalStatus: 'แต่งงานแล้ว, ลูก 3 คน', social: 'ชอบสังสรรค์', hobby: 'พระเครื่อง', sport: 'เดิน', personality: ['ชอบต่อราคา'], marketingConcept: 'เน้นราคาถูกและปริมาณ' },
+    ],
+    farmers: [
+        { id: 'f001', name: 'ลุงชม ศรีประไพ', phone: '091-111-1111', address: 'อ.บางเลน จ.นครปฐม', gender: 'ชาย', age: 62, crop: 'ทุเรียน', area: 50, gps: '13.8023, 100.3230', fertilizerType: 'เคมี, อินทรีย์', fertilizerFreq: '3 ครั้ง/ปี', fertilizerTiming: 'ต้นฝน, กลางฝน, ปลายฝน', roleInCommunity: 'กูรูทำสวน', organicOpinion: 'ดี แต่เห็นผลช้า', otherJobs: 'มีลานรับซื้อผลผลิต', salesRepId: 'sales01', teamId: 'A', storeId: 's001' },
+        { id: 'f002', name: 'ป้าสมศรี มีสุข', phone: '092-222-2222', address: 'อ.เมือง จ.ปทุมธานี', gender: 'หญิง', age: 58, crop: 'กล้วยไม้', area: 10, gps: '14.0225, 100.6110', fertilizerType: 'อินทรีย์', fertilizerFreq: '4 ครั้ง/ปี', fertilizerTiming: 'ทุก 3 เดือน', roleInCommunity: 'ประธานกลุ่มแม่บ้าน', organicOpinion: 'ดีมาก ใช้ตลอด', otherJobs: 'ขายของในตลาด', salesRepId: 'sales01', teamId: 'A', storeId: 's002' },
+        { id: 'f003', name: 'นายมีชัย ชนะศึก', phone: '093-333-3333', address: 'อ.พรหมพิราม จ.พิษณุโลก', gender: 'ชาย', age: 45, crop: 'ข้าวโพด', area: 200, gps: '16.8333, 100.2500', fertilizerType: 'เคมี', fertilizerFreq: '2 ครั้ง/ปี', fertilizerTiming: 'รองพื้น, แต่งหน้า', roleInCommunity: 'ผู้ใหญ่บ้าน', organicOpinion: 'ไม่ค่อยเชื่อมั่น', otherJobs: 'ไม่มี', salesRepId: 'sales02', teamId: 'B', storeId: 's003' },
+    ],
+    trialPlots: [
+        { id: 't001', farmerId: 'f001', storeId: 's001', crop: 'ทุเรียน', area: 2, fertilizer: 'ปุ๋ยอินทรีย์สูตร A', period: 'มิ.ย. - ก.ย. 2025', problem: 'ดินแข็ง, ผลไม่โต', expectedResult: 'ดินร่วนซุยขึ้น, ผลใหญ่ขึ้น', followUpDate: '2025-09-15', resultMetExpectations: true, soilChange: 'ดินมีความร่วนซุยมากขึ้น, ค่า pH ดีขึ้น', plantChange: 'ใบเขียวเข้มขึ้น, ขนาดผลใหญ่ขึ้น 15%', purchaseChance: 5 },
+    ]
+};
+
+// --- GLOBAL STATE ---
+let currentUser = null;
+let currentView = 'dashboard';
+let currentCustomerTab = 'stores';
+let newCustomersChart = null;
+let cropTypesChart = null;
+let mapInstance = null;
+let customerMarkers = null;
+let userLocationMarker = null;
+
+
+// --- DOM ELEMENTS ---
+const loginPage = document.getElementById('loginPage');
+const mainApp = document.getElementById('mainApp');
+const loginForm = document.getElementById('loginForm');
+const logoutButton = document.getElementById('logoutButton');
+const pages = document.querySelectorAll('.main-page');
+const navLinks = document.querySelectorAll('.nav-link');
+const customerTableBody = document.getElementById('customerTableBody');
+const customerTableHeader = document.getElementById('customerTableHeader');
+const tabStores = document.getElementById('tabStores');
+const tabFarmers = document.getElementById('tabFarmers');
+const customerSearch = document.getElementById('customerSearch');
+const profileDetailPage = document.getElementById('profileDetail');
+const formModal = document.getElementById('formModal');
+const closeModalBtn = document.getElementById('closeModalBtn');
+const cancelFormBtn = document.getElementById('cancelFormBtn');
+const addCustomerBtn = document.getElementById('addCustomerBtn');
+const customerForm = document.getElementById('customerForm');
+const formTitle = document.getElementById('formTitle');
+const formFields = document.getElementById('formFields');
+
+
+// --- AUTHENTICATION ---
+loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const user = mockData.users.find(u => u.id === username && u.password === password);
+    
+    if (user) {
+        currentUser = user;
+        loginPage.classList.add('hidden');
+        mainApp.classList.remove('hidden');
+        initializeApp();
+    } else {
+        alert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+    }
+});
+
+logoutButton.addEventListener('click', () => {
+    currentUser = null;
+    mainApp.classList.add('hidden');
+    loginPage.classList.remove('hidden');
+    document.getElementById('loginForm').reset();
+    if (mapInstance) {
+        mapInstance.remove();
+        mapInstance = null;
+        customerMarkers = null;
+        userLocationMarker = null;
+    }
+});
+
+// --- INITIALIZATION ---
+function initializeApp() {
+    document.getElementById('userName').textContent = currentUser.name;
+    const roleMap = { admin: 'Admin', manager: 'ผู้จัดการเขต', sales: 'พนักงานขาย' };
+    document.getElementById('userRole').textContent = roleMap[currentUser.role];
+    navigateTo('dashboard');
+}
+
+// --- NAVIGATION ---
+function navigateTo(pageId, context = null) {
+    pages.forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    
+    navLinks.forEach(link => {
+        const linkPageId = link.getAttribute('href').substring(1);
+        if (linkPageId === pageId) {
+            link.classList.add('bg-green-100', 'text-green-600', 'font-bold');
+        } else {
+            link.classList.remove('bg-green-100', 'text-green-600', 'font-bold');
+        }
+    });
+
+    currentView = pageId;
+
+    switch (pageId) {
+        case 'dashboard':
+            renderDashboard();
+            break;
+        case 'customers':
+            renderCustomerList();
+            break;
+        case 'map':
+            renderMapPage();
+            break;
+        case 'profileDetail':
+            renderProfileDetail(context);
+            break;
+    }
+}
+
+navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const pageId = e.currentTarget.getAttribute('href').substring(1);
+        navigateTo(pageId);
+    });
+});
+
+// --- RENDERING FUNCTIONS ---
+
+function renderDashboard() {
+    let stores = filterData(mockData.stores);
+    let farmers = filterData(mockData.farmers);
+    let trials = filterData(mockData.trialPlots);
+
+    document.getElementById('statStores').textContent = stores.length;
+    document.getElementById('statFarmers').textContent = farmers.length;
+    document.getElementById('statTrials').textContent = trials.length;
+    
+    const totalSales = stores.reduce((sum, store) => sum + store.fertilizerVolume, 0);
+    document.getElementById('statSales').textContent = totalSales.toLocaleString();
+
+    renderCharts(farmers);
+}
+
+function renderCharts(farmersData) {
+    const newCustomersCanvas = document.getElementById('newCustomersChart');
+    if (newCustomersCanvas) {
+        const ctxNewCustomers = newCustomersCanvas.getContext('2d');
+        if (newCustomersChart) newCustomersChart.destroy();
+        newCustomersChart = new Chart(ctxNewCustomers, {
+            type: 'line',
+            data: {
+                labels: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.'],
+                datasets: [{
+                    label: 'ร้านค้าใหม่', data: [1, 0, 2, 1, 3, 1],
+                    borderColor: 'rgb(59, 130, 246)', backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true, tension: 0.4
+                }, {
+                    label: 'เกษตรกรใหม่', data: [5, 4, 8, 5, 10, 7],
+                    borderColor: 'rgb(16, 185, 129)', backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true, tension: 0.4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+
+    const cropTypesCanvas = document.getElementById('cropTypesChart');
+    if(cropTypesCanvas) {
+        const cropCounts = farmersData.reduce((acc, farmer) => {
+            acc[farmer.crop] = (acc[farmer.crop] || 0) + 1;
+            return acc;
+        }, {});
+        const ctxCropTypes = cropTypesCanvas.getContext('2d');
+        if (cropTypesChart) cropTypesChart.destroy();
+        cropTypesChart = new Chart(ctxCropTypes, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(cropCounts),
+                datasets: [{
+                    label: 'ประเภทพืช',
+                    data: Object.values(cropCounts),
+                    backgroundColor: ['#34D399', '#FBBF24', '#A78BFA', '#60A5FA', '#F87171'],
+                    hoverOffset: 4,
+                    borderWidth: 0,
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                cutout: '60%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        align: 'center',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+function renderCustomerList() {
+    const searchTerm = customerSearch.value.toLowerCase();
+    const data = filterData(mockData[currentCustomerTab]);
+    
+    const filteredData = data.filter(item => item.name.toLowerCase().includes(searchTerm));
+
+    let headers = currentCustomerTab === 'stores'
+        ? ['ชื่อร้านค้า', 'สถานะ', 'พื้นที่ขายหลัก', 'ยอดปุ๋ย (ตัน/ปี)', 'ผู้รับผิดชอบ']
+        : ['ชื่อเกษตรกร', 'พืชที่ปลูก', 'พื้นที่ (ไร่)', 'ผู้รับผิดชอบ', 'ร้านค้าที่ซื้อ'];
+    customerTableHeader.innerHTML = `<tr>${headers.map(h => `<th class="p-4">${h}</th>`).join('')}</tr>`;
+
+    customerTableBody.innerHTML = '';
+    if (filteredData.length === 0) {
+        customerTableBody.innerHTML = `<tr><td colspan="${headers.length}" class="text-center p-8 text-gray-500">ไม่พบข้อมูล</td></tr>`;
+        return;
+    }
+
+    filteredData.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-50 cursor-pointer';
+        tr.dataset.id = item.id;
+        tr.dataset.type = currentCustomerTab;
+
+        const salesRep = mockData.users.find(u => u.id === item.salesRepId);
+
+        if (currentCustomerTab === 'stores') {
+            tr.innerHTML = `
+                <td class="p-4 font-semibold text-green-700">${item.name}</td>
+                <td class="p-4"><span class="px-2 py-1 text-xs font-semibold rounded-full ${item.status === 'ร้านใหม่' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}">${item.status}</span></td>
+                <td class="p-4">${item.salesArea}</td>
+                <td class="p-4">${item.fertilizerVolume.toLocaleString()}</td>
+                <td class="p-4">${salesRep ? salesRep.name : 'N/A'}</td>
+            `;
+        } else {
+            const store = mockData.stores.find(s => s.id === item.storeId);
+            tr.innerHTML = `
+                <td class="p-4 font-semibold text-green-700">${item.name}</td>
+                <td class="p-4">${item.crop}</td>
+                <td class="p-4">${item.area.toLocaleString()}</td>
+                <td class="p-4">${salesRep ? salesRep.name : 'N/A'}</td>
+                <td class="p-4">${store ? store.name : 'N/A'}</td>
+            `;
+        }
+        tr.addEventListener('click', () => navigateTo('profileDetail', { id: item.id, type: currentCustomerTab }));
+        customerTableBody.appendChild(tr);
+    });
+}
+
+function renderMapPage() {
+    if (!mapInstance) {
+        mapInstance = L.map('mapContainer').setView([13.7563, 100.5018], 8);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(mapInstance);
+        
+        customerMarkers = L.layerGroup().addTo(mapInstance);
+    }
+
+    customerMarkers.clearLayers();
+
+    const storeIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+
+    const farmerIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+    
+    const userLocationIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+
+    filterData(mockData.stores).forEach(store => {
+        if (store.gps) {
+            const [lat, lng] = store.gps.split(',').map(Number);
+            L.marker([lat, lng], {icon: storeIcon})
+             .bindPopup(`<b>ร้านค้า:</b> ${store.name}`)
+             .addTo(customerMarkers);
+        }
+    });
+
+    filterData(mockData.farmers).forEach(farmer => {
+        if (farmer.gps) {
+            const [lat, lng] = farmer.gps.split(',').map(Number);
+            L.marker([lat, lng], {icon: farmerIcon})
+             .bindPopup(`<b>เกษตรกร:</b> ${farmer.name}<br>พืช: ${farmer.crop}`)
+             .addTo(customerMarkers);
+        }
+    });
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                if (userLocationMarker) {
+                    mapInstance.removeLayer(userLocationMarker);
+                }
+                userLocationMarker = L.marker([latitude, longitude], { icon: userLocationIcon })
+                    .addTo(mapInstance)
+                    .bindPopup('<b>ตำแหน่งของคุณ</b>')
+                    .openPopup();
+            },
+            () => {
+                console.log("ไม่สามารถเข้าถึงตำแหน่งได้");
+            }
+        );
+    }
+
+    setTimeout(() => mapInstance.invalidateSize(), 10);
+}
+
+
+function renderProfileDetail(context) {
+    const { id, type } = context;
+    const item = mockData[type].find(i => i.id === id);
+    if (!item) {
+        profileDetailPage.innerHTML = `<p>ไม่พบข้อมูล</p>`;
+        return;
+    }
+
+    let html = `
+        <div class="flex justify-between items-start mb-6">
+            <div>
+                <button id="backToListBtn" class="text-green-600 hover:text-green-800 flex items-center mb-2">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    กลับไปหน้ารายชื่อ
+                </button>
+                <h2 class="text-3xl font-bold text-gray-800">${item.name}</h2>
+            </div>
+            <button class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">แก้ไขข้อมูล</button>
+        </div>
+        <div class="bg-white p-8 rounded-xl shadow-md">
+    `;
+
+    if (type === 'stores') {
+        const owner = mockData.owners.find(o => o.id === item.ownerId);
+        html += renderStoreProfile(item, owner);
+    } else { // farmers
+        html += renderFarmerProfile(item);
+    }
+
+    html += `</div>`;
+    profileDetailPage.innerHTML = html;
+
+    document.getElementById('backToListBtn').addEventListener('click', () => navigateTo('customers'));
+}
+
+function renderDetailRow(label, value) {
+    if (value === undefined || value === null || value === '') return '';
+    return `<div class="grid grid-cols-3 gap-4 py-3 border-b border-gray-100">
+                <dt class="text-sm font-medium text-gray-500">${label}</dt>
+                <dd class="mt-1 text-sm text-gray-900 col-span-2">${value}</dd>
+            </div>`;
+}
+
+function renderStoreProfile(store, owner) {
+    const linkedFarmers = mockData.farmers.filter(f => f.storeId === store.id);
+    return `
+        <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">ข้อมูลร้านค้า</h3>
+        <dl>
+            ${renderDetailRow('สถานะ', store.status)}
+            ${renderDetailRow('ขนาดร้าน', store.size)}
+            ${renderDetailRow('เปิดมากี่ปี', `${store.yearsOpen} ปี`)}
+            ${renderDetailRow('สินค้าหลัก', store.mainProducts)}
+            ${renderDetailRow('ยอดปุ๋ยต่อปี', `${store.fertilizerVolume.toLocaleString()} ตัน`)}
+            ${renderDetailRow('การจ่ายเงิน', store.payment)}
+            ${renderDetailRow('พืชหลักในพื้นที่', store.mainCrops)}
+            ${renderDetailRow('ลักษณะการขาย', store.salesStyle)}
+            ${renderDetailRow('มีซาปั๊วหรือไม่', store.hasSubDealer ? 'มี' : 'ไม่มี')}
+            ${renderDetailRow('มีแบรนด์ตัวเอง', store.hasOwnBrand ? 'มี' : 'ไม่มี')}
+            ${renderDetailRow('ลักษณะร้าน', store.ownership)}
+            ${renderDetailRow('ที่อยู่ (GPS)', `<a href="#" class="text-blue-500" onclick="navigateTo('map'); mapInstance.setView([${store.gps}], 15);">${store.gps}</a>`)}
+        </dl>
+        
+        ${owner ? `
+        <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4 border-b pb-2">ข้อมูลเจ้าของร้าน</h3>
+        <dl>
+            ${renderDetailRow('ชื่อ-สกุล', owner.name)}
+            ${renderDetailRow('เบอร์โทร', owner.phone)}
+            ${renderDetailRow('เพศ/อายุ', `${owner.gender} / ${owner.age} ปี`)}
+            ${renderDetailRow('รุ่นที่', owner.generation)}
+            ${renderDetailRow('สถานะ', owner.maritalStatus)}
+            ${renderDetailRow('งานอดิเรก', owner.hobby)}
+            ${renderDetailRow('บุคลิก', owner.personality.join(', '))}
+            ${renderDetailRow('แนวคิดการตลาด', owner.marketingConcept)}
+        </dl>
+        ` : ''}
+
+        <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4 border-b pb-2">เกษตรกรในเครือ (${linkedFarmers.length})</h3>
+        <ul class="divide-y divide-gray-200">
+            ${linkedFarmers.map(f => `
+                <li class="py-3 flex justify-between items-center">
+                    <span>${f.name} (ปลูก${f.crop} ${f.area} ไร่)</span>
+                    <button class="text-sm text-blue-500 hover:underline" onclick="navigateTo('profileDetail', {id: '${f.id}', type: 'farmers'})">ดูโปรไฟล์</button>
+                </li>
+            `).join('') || '<li class="py-3 text-gray-500">ไม่มีข้อมูลเกษตรกรในเครือ</li>'}
+        </ul>
+    `;
+}
+
+function renderFarmerProfile(farmer) {
+    const linkedTrials = mockData.trialPlots.filter(t => t.farmerId === farmer.id);
+    return `
+        <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">ข้อมูลเกษตรกร</h3>
+        <dl>
+            ${renderDetailRow('เบอร์โทร', farmer.phone)}
+            ${renderDetailRow('ที่อยู่', farmer.address)}
+            ${renderDetailRow('เพศ/อายุ', `${farmer.gender} / ${farmer.age} ปี`)}
+            ${renderDetailRow('พืชที่ปลูก', `${farmer.crop} (${farmer.area} ไร่)`)}
+            ${renderDetailRow('ประเภทปุ๋ยที่ใช้', farmer.fertilizerType)}
+            ${renderDetailRow('ความถี่การใช้ปุ๋ย', farmer.fertilizerFreq)}
+            ${renderDetailRow('ช่วงเวลาที่ใช้', farmer.fertilizerTiming)}
+            ${renderDetailRow('บทบาทในพื้นที่', farmer.roleInCommunity)}
+            ${renderDetailRow('ความคิดเรื่องปุ๋ยอินทรีย์', farmer.organicOpinion)}
+            ${renderDetailRow('อาชีพอื่นๆ', farmer.otherJobs)}
+            ${renderDetailRow('ที่อยู่ (GPS)', `<a href="#" class="text-blue-500" onclick="navigateTo('map'); mapInstance.setView([${farmer.gps}], 15);">${farmer.gps}</a>`)}
+        </dl>
+
+        <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4 border-b pb-2">ประวัติแปลงทดลอง (${linkedTrials.length})</h3>
+        ${linkedTrials.map(t => `
+            <div class="p-4 border rounded-lg mb-4 bg-gray-50">
+                <h4 class="font-bold">แปลงทดลอง: ${t.crop} (ปุ๋ย: ${t.fertilizer})</h4>
+                <p class="text-sm text-gray-600">ช่วงเวลา: ${t.period}</p>
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="font-semibold">ผลที่คาดหวัง:</p>
+                        <p>${t.expectedResult}</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold">ผลลัพธ์:</p>
+                        <p class="${t.resultMetExpectations ? 'text-green-600' : 'text-red-600'}">
+                            ${t.resultMetExpectations ? 'เป็นไปตามคาด' : 'ไม่เป็นไปตามคาด'}
+                        </p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <p class="font-semibold">การเปลี่ยนแปลงของพืช:</p>
+                        <p>${t.plantChange}</p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <p class="font-semibold">โอกาสที่จะซื้อหลังทดลอง:</p>
+                        <div class="flex items-center">
+                            ${[...Array(5)].map((_, i) => `<svg class="w-5 h-5 ${i < t.purchaseChance ? 'text-yellow-400' : 'text-gray-300'}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('') || '<p class="text-gray-500">ไม่มีข้อมูลแปลงทดลอง</p>'}
+    `;
+}
+
+// --- MODAL & FORM HANDLING ---
+function openModal(type, id = null) {
+    formModal.classList.add('active');
+    formTitle.textContent = id ? `แก้ไขข้อมูล${type === 'stores' ? 'ร้านค้า' : 'เกษตรกร'}` : `เพิ่ม${type === 'stores' ? 'ร้านค้า' : 'เกษตรกร'}ใหม่`;
+    formFields.innerHTML = '';
+    
+    let fields = [];
+    if (type === 'stores') {
+        fields = [
+            { label: 'ชื่อร้านค้า', name: 'name', type: 'text', required: true },
+            { label: 'สถานะ', name: 'status', type: 'select', options: ['ร้านเก่า', 'ร้านใหม่'] },
+        ];
+    } else {
+        fields = [
+            { label: 'ชื่อ-สกุล', name: 'name', type: 'text', required: true },
+            { label: 'พืชที่ปลูก', name: 'crop', type: 'text' },
+        ];
+    }
+
+    fields.forEach(field => {
+        let fieldHtml = `<div class="mb-4">
+            <label for="${field.name}" class="block text-gray-700 text-sm font-bold mb-2">${field.label}${field.required ? ' *' : ''}</label>`;
+        if (field.type === 'select') {
+            fieldHtml += `<select name="${field.name}" id="${field.name}" class="shadow-sm appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500">`;
+            if(Array.isArray(field.options) && typeof field.options[0] === 'string') {
+                 field.options.forEach(opt => fieldHtml += `<option value="${opt}">${opt}</option>`);
+            } else {
+                 field.options.forEach(opt => fieldHtml += `<option value="${opt.value}">${opt.text}</option>`);
+            }
+            fieldHtml += `</select>`;
+        } else {
+            fieldHtml += `<input type="${field.type}" name="${field.name}" id="${field.name}" class="shadow-sm appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500" ${field.required ? 'required' : ''}>`;
+        }
+        fieldHtml += `</div>`;
+        formFields.innerHTML += fieldHtml;
+    });
+}
+
+function closeModal() {
+    formModal.classList.remove('active');
+    customerForm.reset();
+}
+
+addCustomerBtn.addEventListener('click', () => openModal(currentCustomerTab));
+closeModalBtn.addEventListener('click', closeModal);
+cancelFormBtn.addEventListener('click', closeModal);
+customerForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    alert('บันทึกข้อมูลเรียบร้อย (จำลอง)');
+    closeModal();
+    renderCustomerList();
+});
+
+// --- EVENT LISTENERS ---
+tabStores.addEventListener('click', (e) => {
+    e.preventDefault();
+    currentCustomerTab = 'stores';
+    tabStores.classList.add('border-green-500', 'text-green-600');
+    tabStores.classList.remove('border-transparent', 'text-gray-500');
+    tabFarmers.classList.remove('border-green-500', 'text-green-600');
+    tabFarmers.classList.add('border-transparent', 'text-gray-500');
+    renderCustomerList();
+});
+
+tabFarmers.addEventListener('click', (e) => {
+    e.preventDefault();
+    currentCustomerTab = 'farmers';
+    tabFarmers.classList.add('border-green-500', 'text-green-600');
+    tabFarmers.classList.remove('border-transparent', 'text-gray-500');
+    tabStores.classList.remove('border-green-500', 'text-green-600');
+    tabStores.classList.add('border-transparent', 'text-gray-500');
+    renderCustomerList();
+});
+
+customerSearch.addEventListener('input', renderCustomerList);
+
+// --- UTILITY FUNCTIONS ---
+function filterData(data) {
+    if (currentUser.role === 'admin') {
+        return data;
+    }
+    if (currentUser.role === 'manager') {
+        return data.filter(item => item.teamId === currentUser.teamId);
+    }
+    if (currentUser.role === 'sales') {
+        return data.filter(item => item.salesRepId === currentUser.id);
+    }
+    return [];
+}
+
+</script>
+</body>
+</html>
