@@ -40,6 +40,18 @@
         .bottom-nav-link.active {
             color: #10B981; /* green-500 */
         }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #10B981;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="pb-24">
@@ -120,13 +132,19 @@
                     </div>
                 </div>
                 <div class="grid grid-cols-1 gap-4">
+                    <div id="geminiTipCard" class="bg-gradient-to-br from-green-500 to-emerald-600 p-4 rounded-xl shadow-lg text-white text-center cursor-pointer hover:opacity-90 transition-opacity">
+                        <h3 class="text-lg font-bold">เคล็ดลับจาก Gemini</h3>
+                        <p class="text-sm">แตะเพื่อสร้างเคล็ดลับการขาย</p>
+                    </div>
                     <div class="bg-white p-4 rounded-xl shadow-md h-64">
                         <h3 class="text-lg font-bold text-gray-800 mb-2">ลูกค้าใหม่</h3>
                         <canvas id="newCustomersChart"></canvas>
                     </div>
-                    <div class="bg-white p-4 rounded-xl shadow-md h-64">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">ประเภทพืชหลัก</h3>
-                        <canvas id="cropTypesChart"></canvas>
+                    <div class="bg-white p-4 rounded-xl shadow-md h-64 flex flex-col">
+                        <h3 class="text-lg font-bold text-gray-800 mb-2 text-center flex-shrink-0">ประเภทพืชหลัก</h3>
+                        <div class="relative flex-grow">
+                            <canvas id="cropTypesChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -185,7 +203,7 @@
         </nav>
     </div>
 
-    <!-- Modal for Add/Edit Form -->
+    <!-- Add/Edit Form Modal -->
     <div id="formModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-full overflow-y-auto">
             <div class="p-4 border-b flex justify-between items-center">
@@ -199,6 +217,19 @@
                     <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">บันทึก</button>
                 </div>
             </form>
+        </div>
+    </div>
+    
+    <!-- Gemini Tip Modal -->
+    <div id="geminiModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-full overflow-y-auto">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-green-600">เคล็ดลับจาก Gemini</h3>
+                <button id="closeGeminiModalBtn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <div id="geminiTipContent" class="p-6 min-h-[150px] flex items-center justify-center">
+                <!-- Content will be injected here -->
+            </div>
         </div>
     </div>
 
@@ -262,6 +293,10 @@ const addCustomerBtn = document.getElementById('addCustomerBtn');
 const customerForm = document.getElementById('customerForm');
 const formTitle = document.getElementById('formTitle');
 const formFields = document.getElementById('formFields');
+const geminiTipCard = document.getElementById('geminiTipCard');
+const geminiModal = document.getElementById('geminiModal');
+const closeGeminiModalBtn = document.getElementById('closeGeminiModalBtn');
+const geminiTipContent = document.getElementById('geminiTipContent');
 
 
 // --- AUTHENTICATION ---
@@ -812,6 +847,41 @@ customerForm.addEventListener('submit', (e) => {
     closeModal();
     renderCustomerList();
 });
+
+// --- GEMINI API ---
+async function getSalesTip() {
+    geminiModal.classList.add('active');
+    geminiTipContent.innerHTML = '<div class="spinner"></div>';
+    
+    const prompt = "คุณคือผู้เชี่ยวชาญด้านการขายสินค้าเกษตร จงสร้างเคล็ดลับการขายปุ๋ยสั้นๆ 1 ข้อ สำหรับพนักงานขายในประเทศไทย";
+    let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+    const payload = { contents: chatHistory };
+    const apiKey = ""; // Canvas will provide the key
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        
+        if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts[0]) {
+            const text = result.candidates[0].content.parts[0].text;
+            geminiTipContent.innerHTML = `<p class="text-gray-700 text-center">${text}</p>`;
+        } else {
+            throw new Error("Invalid response structure from Gemini API.");
+        }
+    } catch (error) {
+        console.error("Error fetching Gemini tip:", error);
+        geminiTipContent.innerHTML = `<p class="text-red-500">ขออภัย, ไม่สามารถสร้างเคล็ดลับได้ในขณะนี้</p>`;
+    }
+}
+
+geminiTipCard.addEventListener('click', getSalesTip);
+closeGeminiModalBtn.addEventListener('click', () => geminiModal.classList.remove('active'));
+
 
 // --- EVENT LISTENERS ---
 tabStores.addEventListener('click', (e) => {
