@@ -144,11 +144,9 @@
                         <h3 class="text-lg font-bold text-gray-800 mb-2">ลูกค้าใหม่</h3>
                         <canvas id="newCustomersChart"></canvas>
                     </div>
-                    <div class="bg-white p-4 rounded-xl shadow-md h-56 flex flex-col">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2 text-center flex-shrink-0">ประเภทพืชหลัก</h3>
-                        <div class="relative flex-grow">
-                            <canvas id="cropTypesChart"></canvas>
-                        </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md h-64">
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">ประเภทพืชหลัก</h3>
+                        <canvas id="cropTypesChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -442,32 +440,28 @@ function renderCharts(farmersData) {
         const ctxCropTypes = cropTypesCanvas.getContext('2d');
         if (cropTypesChart) cropTypesChart.destroy();
         cropTypesChart = new Chart(ctxCropTypes, {
-            type: 'doughnut',
+            type: 'bar', // Changed to bar chart
             data: {
                 labels: Object.keys(cropCounts),
                 datasets: [{
-                    label: 'ประเภทพืช',
+                    label: 'จำนวนเกษตรกร',
                     data: Object.values(cropCounts),
                     backgroundColor: ['#34D399', '#FBBF24', '#A78BFA', '#60A5FA', '#F87171'],
-                    hoverOffset: 4,
                     borderWidth: 0,
                 }]
             },
             options: { 
+                indexAxis: 'y', // Make it horizontal
                 responsive: true, 
                 maintainAspectRatio: false,
-                cutout: '60%',
                 plugins: {
                     legend: {
-                        position: 'top',
-                        align: 'center',
-                        labels: {
-                            boxWidth: 10,
-                            padding: 10,
-                            font: {
-                                size: 10
-                            }
-                        }
+                        display: false // Hide legend for bar chart
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true
                     }
                 }
             }
